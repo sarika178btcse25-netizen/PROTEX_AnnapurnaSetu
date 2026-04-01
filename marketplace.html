@@ -1,0 +1,559 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Annapurna Setu | Advanced Logistics Platform</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800;900&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+    
+    <style>
+        body { font-family: 'Outfit', sans-serif; background-color: #f1f5f9; overflow: hidden; }
+        
+        /* Glassmorphism & UI Enhancements */
+        .glass { background: rgba(255, 255, 255, 0.85); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.4); box-shadow: 0 10px 40px -10px rgba(0,0,0,0.08); }
+        .glass-colorful { background: rgba(255, 255, 255, 0.95); backdrop-filter: blur(15px); border: 2px solid #fbcfe8; box-shadow: 0 20px 50px -10px rgba(236, 72, 153, 0.2); }
+        
+        /* Animations */
+        .fade-in-up { animation: fadeInUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards; }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        
+        .pulse-urgent { animation: pulseRed 2s infinite; }
+        @keyframes pulseRed { 0% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4); } 70% { box-shadow: 0 0 0 10px rgba(239, 68, 68, 0); } 100% { box-shadow: 0 0 0 0 rgba(239, 68, 68, 0); } }
+
+        .pulse-voice { animation: pulseVoice 2s infinite; }
+        @keyframes pulseVoice { 0% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0.4); } 70% { box-shadow: 0 0 0 15px rgba(168, 85, 247, 0); } 100% { box-shadow: 0 0 0 0 rgba(168, 85, 247, 0); } }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar { width: 6px; }
+        ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 10px; }
+
+        /* Form Controls */
+        input, select { transition: all 0.3s ease; }
+        input:focus, select:focus { transform: translateY(-2px); box-shadow: 0 10px 15px -3px rgba(0,0,0,0.05); }
+
+        /* Map Simulation */
+        .map-bg { background-color: #e2e8f0; background-image: radial-gradient(#94a3b8 1px, transparent 1px); background-size: 20px 20px; position: relative; overflow: hidden; }
+        
+        /* Tags */
+        .tag-veg { background: #dcfce7; color: #166534; border: 1px solid #bbf7d0; }
+        .tag-nonveg { background: #fee2e2; color: #991b1b; border: 1px solid #fecaca; }
+        .tag-dry { background: #fef9c3; color: #854d0e; border: 1px solid #fef08a; }
+        .tag-wet { background: #e0f2fe; color: #075985; border: 1px solid #bae6fd; }
+
+        /* Chat Roles - Colorful */
+        .role-donor { border-left: 4px solid #f97316; background: linear-gradient(to right, #fff7ed, white); }
+        .role-ngo { border-left: 4px solid #3b82f6; background: linear-gradient(to right, #eff6ff, white); }
+        .role-runner { border-left: 4px solid #10b981; background: linear-gradient(to right, #ecfdf5, white); }
+    </style>
+</head>
+<body class="flex h-screen text-slate-800">
+
+    <aside class="w-72 glass z-20 flex flex-col justify-between relative shadow-[5px_0_20px_rgba(0,0,0,0.05)] border-r border-white">
+        <div>
+            <div class="p-8 border-b border-slate-200/60 flex items-center gap-4 bg-white/50">
+                <div class="w-12 h-12 bg-gradient-to-br from-orange-500 to-red-600 rounded-2xl flex items-center justify-center text-white font-black text-2xl shadow-lg shadow-orange-500/30">A</div>
+                <div>
+                    <h1 class="font-black text-xl leading-none tracking-tight">ANNAPURNA</h1>
+                    <span class="text-orange-600 font-bold tracking-widest text-xs uppercase">Setu Network</span>
+                </div>
+            </div>
+            
+            <div class="p-6 space-y-3">
+                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-4">Perspective Engine</p>
+                <button onclick="setRole('donor')" id="nav-donor" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold text-slate-500 hover:bg-white transition-all">
+                    <i class="fa-solid fa-store w-6 text-lg"></i> Donor Node
+                </button>
+                <button onclick="setRole('ngo')" id="nav-ngo" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold text-slate-500 hover:bg-white transition-all">
+                    <i class="fa-solid fa-hands-holding-child w-6 text-lg"></i> NGO Node
+                </button>
+                <button onclick="setRole('runner')" id="nav-runner" class="nav-btn w-full flex items-center gap-4 px-5 py-4 rounded-2xl font-bold text-slate-500 hover:bg-white transition-all">
+                    <i class="fa-solid fa-motorcycle w-6 text-lg"></i> Runner HQ
+                </button>
+            </div>
+        </div>
+        
+        <div class="p-6">
+            <button onclick="activateVoiceAssist()" class="w-full mb-6 bg-gradient-to-r from-purple-500 to-indigo-500 text-white p-4 rounded-2xl flex flex-col items-center justify-center gap-1 shadow-lg shadow-purple-500/30 hover:scale-105 active:scale-95 transition-all group pulse-voice">
+                <i class="fa-solid fa-microphone-lines text-2xl group-hover:animate-bounce"></i>
+                <span class="text-[10px] font-black uppercase tracking-widest">AI Voice Assistant</span>
+            </button>
+
+            <div class="bg-slate-900 rounded-3xl p-6 text-white shadow-xl relative overflow-hidden">
+                <div class="absolute -right-4 -top-4 opacity-10 text-6xl"><i class="fa-solid fa-shield-halved"></i></div>
+                <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Live Status</p>
+                <h4 class="font-black text-lg mb-4">System Secure</h4>
+                <div class="w-full bg-slate-800 h-2 rounded-full overflow-hidden">
+                    <div class="bg-gradient-to-r from-emerald-400 to-teal-500 h-full w-full"></div>
+                </div>
+            </div>
+        </div>
+    </aside>
+
+    <main class="flex-1 flex flex-col relative overflow-hidden bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-orange-50 via-slate-50 to-blue-50">
+        
+        <header class="glass z-10 p-6 px-10 flex justify-between items-center border-b border-white">
+            <h2 id="view-title" class="text-3xl font-black text-slate-800 tracking-tight">Dashboard</h2>
+            <div id="karma-widget" class="flex items-center gap-3 bg-gradient-to-r from-orange-500 to-red-500 text-white px-5 py-2.5 rounded-full shadow-lg shadow-orange-500/20 cursor-pointer hover:scale-105 transition-transform">
+                <i class="fa-solid fa-star"></i>
+                <span id="karma-display" class="font-black text-lg">2,450</span>
+                <span class="text-[10px] font-bold uppercase opacity-80 mt-1">Karma</span>
+            </div>
+        </header>
+
+        <div class="flex-1 overflow-y-auto p-10 pb-32">
+            <div class="max-w-7xl mx-auto grid grid-cols-1 xl:grid-cols-12 gap-8">
+                
+                <div class="xl:col-span-7 space-y-8">
+                    
+                    <div id="view-donor" class="hidden fade-in-up">
+                        <div class="glass p-10 rounded-[2rem]">
+                            <div class="flex items-center gap-4 mb-8">
+                                <div class="w-12 h-12 bg-orange-100 text-orange-600 rounded-xl flex items-center justify-center text-xl"><i class="fa-solid fa-box-open"></i></div>
+                                <div>
+                                    <h3 class="text-2xl font-black text-slate-800">Post Surplus Cargo</h3>
+                                    <p class="text-xs font-bold text-slate-400 uppercase tracking-widest">Strict Safety Protocols Active</p>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-6">
+                                <div class="col-span-2 space-y-1">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Food Details & Quantity</label>
+                                    <input id="d-name" type="text" placeholder="e.g. 50 Plates of Veg Biryani" class="w-full p-4 bg-white/80 border border-slate-200 rounded-2xl outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-medium">
+                                </div>
+                                
+                                <div class="col-span-2 space-y-1">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Exact Pickup Address</label>
+                                    <input id="d-address" type="text" placeholder="e.g. Radisson Blu, Gate 3, Sector 18" class="w-full p-4 bg-white/80 border border-slate-200 rounded-2xl outline-none focus:border-orange-500 focus:ring-4 focus:ring-orange-500/10 font-medium">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Dietary Category</label>
+                                    <select id="d-diet" class="w-full p-4 bg-white/80 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 cursor-pointer">
+                                        <option value="Veg">🟢 Pure Vegetarian</option>
+                                        <option value="Non-Veg">🔴 Non-Vegetarian</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-slate-500 uppercase ml-2">Consistency / Packaging</label>
+                                    <select id="d-state" class="w-full p-4 bg-white/80 border border-slate-200 rounded-2xl outline-none font-bold text-slate-700 cursor-pointer">
+                                        <option value="Wet">🍲 Cooked / Wet Food</option>
+                                        <option value="Dry">🍞 Packaged / Dry Food</option>
+                                    </select>
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-orange-600 uppercase ml-2">Time of Preparation</label>
+                                    <input id="d-made" type="datetime-local" class="w-full p-4 bg-orange-50/50 border border-orange-200 rounded-2xl outline-none text-sm font-bold text-slate-700 cursor-pointer">
+                                </div>
+
+                                <div class="space-y-1">
+                                    <label class="text-[10px] font-black text-red-600 uppercase ml-2">Strict Expiry Time</label>
+                                    <input id="d-exp" type="datetime-local" class="w-full p-4 bg-red-50 border border-red-300 rounded-2xl outline-none text-sm font-bold text-red-700 cursor-pointer shadow-[0_0_15px_rgba(239,68,68,0.1)]">
+                                </div>
+
+                                <button onclick="postFood()" class="col-span-2 mt-4 py-5 bg-gradient-to-r from-slate-900 to-slate-800 text-white font-black text-lg rounded-2xl shadow-xl hover:from-orange-500 hover:to-red-500 transition-all tracking-wide transform hover:-translate-y-1">BROADCAST TO NETWORK</button>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div id="view-ngo" class="hidden fade-in-up space-y-6">
+                        <div class="bg-gradient-to-r from-blue-600 to-indigo-700 p-8 rounded-[2rem] text-white shadow-xl shadow-blue-500/20 relative overflow-hidden">
+                            <i class="fa-solid fa-hand-holding-heart absolute -right-10 -bottom-10 text-9xl opacity-10"></i>
+                            <h3 class="font-black text-2xl mb-2 relative z-10">Set Delivery Destination</h3>
+                            <p class="text-blue-200 text-sm mb-6 relative z-10">Runners need an exact drop-off point before you can claim cargo.</p>
+                            <div class="relative z-10">
+                                <i class="fa-solid fa-location-dot absolute left-5 top-1/2 -translate-y-1/2 text-blue-300"></i>
+                                <input id="ngo-address" type="text" placeholder="e.g. Hope Orphanage, Main Building, Sector 5..." class="w-full bg-white/10 border border-white/20 p-4 pl-12 rounded-2xl text-white placeholder-blue-200 outline-none focus:bg-white/20 font-medium transition-all shadow-inner">
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-4 px-2">
+                                <div>
+                                    <h3 class="font-black text-slate-800 text-xl">Priority Live Feed</h3>
+                                    <p class="text-[10px] font-bold text-red-500 uppercase tracking-widest mt-1"><i class="fa-solid fa-arrow-down-short-wide"></i> Sorted by Expiry Date</p>
+                                </div>
+                                <span class="flex h-3 w-3 relative">
+                                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                                    <span class="relative inline-flex rounded-full h-3 w-3 bg-emerald-500"></span>
+                                </span>
+                            </div>
+                            <div id="ngo-feed" class="space-y-4"></div>
+                        </div>
+                    </div>
+
+                    <div id="view-runner" class="hidden fade-in-up space-y-8">
+                        
+                        <div id="r-manifest" class="hidden glass p-8 rounded-[2rem] border-l-8 border-l-emerald-500 shadow-2xl relative overflow-hidden">
+                            <div class="absolute top-0 right-0 bg-emerald-500 text-white px-6 py-2 rounded-bl-2xl font-black text-[10px] tracking-widest uppercase shadow-lg">Active Handshake</div>
+                            
+                            <h3 class="text-3xl font-black text-slate-800 mb-6">Mission Manifest</h3>
+                            
+                            <div class="bg-slate-50 border border-slate-200 rounded-2xl p-6 mb-6">
+                                <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest mb-2">Cargo Specifications</p>
+                                <h4 id="r-cargo-name" class="text-xl font-black text-slate-800 mb-3">---</h4>
+                                <div id="r-cargo-tags" class="flex gap-2 text-xs font-bold"></div>
+                                <div class="mt-4 pt-4 border-t border-slate-200 flex justify-between">
+                                    <div><p class="text-[10px] text-slate-500 uppercase font-bold">Made</p><p id="r-cargo-made" class="text-sm font-bold">---</p></div>
+                                    <div class="text-right"><p class="text-[10px] text-red-500 uppercase font-bold">Expires</p><p id="r-cargo-exp" class="text-sm font-black text-red-600">---</p></div>
+                                </div>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+                                <div class="bg-orange-50 border border-orange-100 p-5 rounded-2xl">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-8 h-8 bg-orange-500 text-white rounded-full flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-A"></i></div>
+                                        <p class="text-[10px] font-black text-orange-600 uppercase tracking-widest">Pickup Origin</p>
+                                    </div>
+                                    <p id="r-pickup-addr" class="font-bold text-slate-700 pl-11">---</p>
+                                </div>
+                                <div class="bg-blue-50 border border-blue-100 p-5 rounded-2xl">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <div class="w-8 h-8 bg-blue-500 text-white rounded-full flex items-center justify-center text-xs shadow-md"><i class="fa-solid fa-B"></i></div>
+                                        <p class="text-[10px] font-black text-blue-600 uppercase tracking-widest">Delivery Target</p>
+                                    </div>
+                                    <p id="r-delivery-addr" class="font-bold text-slate-700 pl-11">---</p>
+                                </div>
+                            </div>
+
+                            <div class="flex gap-4">
+                                <button onclick="startNav()" id="btn-nav" class="flex-1 bg-slate-900 hover:bg-slate-800 text-white py-5 rounded-2xl font-black text-lg tracking-widest transition-all shadow-xl"><i class="fa-solid fa-route mr-2"></i> INITIATE ROUTE</button>
+                                <button onclick="completeTask()" id="btn-verify" class="hidden flex-1 bg-gradient-to-r from-emerald-500 to-emerald-600 text-white py-5 rounded-2xl font-black text-lg tracking-widest transition-all shadow-xl shadow-emerald-500/30 pulse-urgent"><i class="fa-solid fa-check-double mr-2"></i> CONFIRM HANDSHAKE</button>
+                            </div>
+                        </div>
+
+                        <div>
+                            <div class="flex justify-between items-end mb-4 px-2">
+                                <h3 class="font-black text-slate-800 text-xl">Hall of Honor Certifications</h3>
+                            </div>
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                                <div class="glass p-6 rounded-3xl border-2 border-orange-400 relative overflow-hidden group hover:-translate-y-1 transition-transform cursor-pointer shadow-lg shadow-orange-500/10">
+                                    <div class="absolute -right-4 -bottom-4 text-6xl opacity-10 group-hover:opacity-20 transition-opacity">🥉</div>
+                                    <h4 class="font-black text-slate-800 mb-1">Setu Mitra</h4>
+                                    <p class="text-[10px] font-bold text-emerald-600 bg-emerald-50 inline-block px-2 py-1 rounded uppercase tracking-widest">Unlocked</p>
+                                    <button onclick="downloadCert('Mitra')" class="mt-4 w-full text-xs font-black bg-slate-100 py-2 rounded-xl hover:bg-orange-500 hover:text-white transition-colors">Download PDF</button>
+                                </div>
+                                
+                                <div class="glass p-6 rounded-3xl border border-slate-200 relative overflow-hidden opacity-60 grayscale hover:grayscale-0 transition-all">
+                                    <h4 class="font-black text-slate-800 mb-1">Logistics Legend</h4>
+                                    <p class="text-[10px] font-bold text-slate-500 bg-slate-100 inline-block px-2 py-1 rounded uppercase tracking-widest"><i class="fa-solid fa-lock mr-1"></i> 5,000 Pts Req.</p>
+                                    <div class="mt-4 w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div class="bg-orange-400 h-full w-[49%]"></div></div>
+                                </div>
+
+                                <div class="glass p-6 rounded-3xl border border-slate-200 relative overflow-hidden opacity-60 grayscale">
+                                    <h4 class="font-black text-slate-800 mb-1">Hunger Guardian</h4>
+                                    <p class="text-[10px] font-bold text-slate-500 bg-slate-100 inline-block px-2 py-1 rounded uppercase tracking-widest"><i class="fa-solid fa-lock mr-1"></i> 10,000 Pts Req.</p>
+                                    <div class="mt-4 w-full bg-slate-200 h-2 rounded-full overflow-hidden"><div class="bg-orange-400 h-full w-[24%]"></div></div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="xl:col-span-5 relative">
+                    <div class="sticky top-0 bg-slate-900 h-[600px] rounded-[2.5rem] shadow-2xl border-4 border-slate-800 overflow-hidden map-bg flex flex-col justify-end">
+                        <div id="map-donor" class="absolute top-1/4 left-[20%] w-6 h-6 bg-orange-500 rounded-full hidden shadow-[0_0_30px_#f97316] z-10 border-2 border-white flex items-center justify-center"><i class="fa-solid fa-A text-[10px] text-white"></i></div>
+                        <div id="map-ngo" class="absolute bottom-1/4 right-[20%] w-6 h-6 bg-blue-500 rounded-full hidden shadow-[0_0_30px_#3b82f6] z-10 border-2 border-white flex items-center justify-center"><i class="fa-solid fa-B text-[10px] text-white"></i></div>
+                        <div id="map-runner" class="absolute bottom-12 left-1/2 -translate-x-1/2 w-12 h-12 bg-white rounded-2xl flex items-center justify-center text-2xl shadow-[0_10px_30px_rgba(0,0,0,0.5)] z-20 transition-all duration-1000 ease-in-out border-4 border-emerald-500">🛵</div>
+
+                        <div class="bg-gradient-to-t from-black to-transparent p-8 pt-20 relative z-30">
+                            <p class="text-[10px] font-black text-emerald-400 uppercase tracking-widest mb-1">Satellite Uplink</p>
+                            <h4 id="map-status" class="text-white font-bold text-lg leading-tight">Awaiting logistics coordinates...</h4>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="fixed bottom-8 right-10 z-50 flex flex-col items-end">
+            <div id="chat-window" class="glass-colorful w-[380px] h-[520px] rounded-[2rem] mb-6 overflow-hidden flex flex-col transition-all duration-300 transform translate-y-8 opacity-0 pointer-events-none">
+                
+                <div class="p-5 bg-gradient-to-r from-fuchsia-500 via-pink-500 to-orange-400 flex justify-between items-center text-white shadow-md">
+                    <div>
+                        <h3 class="font-black text-xl flex items-center gap-2">Setu Talk <i class="fa-solid fa-tower-broadcast text-white/80 text-sm animate-pulse"></i></h3>
+                        <p class="text-[10px] font-bold uppercase tracking-widest mt-1 opacity-90">Live Communication Network</p>
+                    </div>
+                    <button onclick="toggleChat()" class="text-white hover:bg-white/20 w-8 h-8 flex items-center justify-center rounded-full transition-colors"><i class="fa-solid fa-xmark"></i></button>
+                </div>
+                
+                <div id="chat-messages" class="flex-1 p-5 overflow-y-auto flex flex-col gap-4 scroll-smooth bg-slate-50/50">
+                    <div class="text-center my-auto">
+                        <div class="w-16 h-16 bg-pink-100 text-pink-500 rounded-full flex items-center justify-center text-2xl mx-auto mb-3 shadow-sm"><i class="fa-solid fa-shield-cat"></i></div>
+                        <p class="text-[10px] font-black text-slate-400 uppercase tracking-widest">Comm channel open.<br>Awaiting mission data.</p>
+                    </div>
+                </div>
+
+                <div class="p-4 bg-white border-t border-pink-100 flex gap-3">
+                    <input id="chat-input" type="text" placeholder="Type a message..." onkeypress="if(event.key === 'Enter') sendChat()" class="flex-1 bg-slate-100 border-transparent rounded-xl px-4 py-3 text-sm text-slate-700 placeholder-slate-400 outline-none focus:bg-white focus:border-pink-300 focus:ring-2 focus:ring-pink-100 transition-all font-medium">
+                    <button onclick="sendChat()" class="w-12 h-12 bg-gradient-to-r from-pink-500 to-orange-400 hover:opacity-90 text-white rounded-xl shadow-lg flex items-center justify-center transition-opacity hover:scale-105 active:scale-95"><i class="fa-solid fa-paper-plane"></i></button>
+                </div>
+            </div>
+
+            <button onclick="toggleChat()" class="w-16 h-16 bg-gradient-to-r from-fuchsia-500 to-pink-500 text-white rounded-full flex items-center justify-center text-2xl shadow-[0_10px_25px_rgba(236,72,153,0.4)] border-2 border-white hover:scale-110 active:scale-95 transition-all relative group">
+                <i class="fa-solid fa-comments group-hover:animate-bounce"></i>
+                <span class="absolute -top-1 -right-1 flex h-4 w-4">
+                    <span class="animate-ping absolute inline-flex h-full w-full rounded-full bg-yellow-400 opacity-75"></span>
+                    <span class="relative inline-flex rounded-full h-4 w-4 bg-yellow-400 border-2 border-white"></span>
+                </span>
+            </button>
+        </div>
+    </main>
+
+    <script>
+        // --- Core State ---
+        let app = { 
+            role: 'donor', 
+            karma: 2450, 
+            foodDb: [], 
+            mission: null, 
+            chatOpen: false 
+        };
+
+        // --- Role Management ---
+        function setRole(role) {
+            app.role = role;
+            ['donor', 'ngo', 'runner'].forEach(r => {
+                document.getElementById('nav-' + r).classList.remove('bg-white', 'shadow-sm', 'text-slate-800');
+                document.getElementById('nav-' + r).classList.add('text-slate-500');
+                document.getElementById('view-' + r).classList.add('hidden');
+            });
+            
+            document.getElementById('nav-' + role).classList.add('bg-white', 'shadow-sm', 'text-slate-800');
+            document.getElementById('nav-' + role).classList.remove('text-slate-500');
+            document.getElementById('view-' + role).classList.remove('hidden');
+            
+            const titles = { donor: 'Donor Control Node', ngo: 'NGO Delivery Request', runner: 'Runner Headquarters' };
+            document.getElementById('view-title').innerText = titles[role];
+            
+            renderUI();
+        }
+
+        // --- Voice Assistant ---
+        function activateVoiceAssist() {
+            if ('speechSynthesis' in window) {
+                let msg = "";
+                if (app.role === 'donor') {
+                    msg = "Donor Node active. Please enter surplus cargo details including accurate expiry dates to ensure safety.";
+                } else if (app.role === 'ngo') {
+                    const count = app.foodDb.filter(f => f.status === 'available').length;
+                    msg = `NGO Node active. There are currently ${count} verified surplus items available. Items closest to expiry are prioritized at the top of your feed.`;
+                } else if (app.role === 'runner') {
+                    if (app.mission) {
+                        msg = `Runner active. You have an urgent mission. Pick up ${app.mission.name} at ${app.mission.addr} and deliver to ${app.mission.deliveryAddr}.`;
+                    } else {
+                        msg = "Runner Headquarters online. Standby for incoming logistics coordinates.";
+                    }
+                }
+                
+                const utterance = new SpeechSynthesisUtterance(msg);
+                utterance.rate = 1.0;
+                utterance.pitch = 1.1; // Slightly higher, friendly pitch
+                window.speechSynthesis.speak(utterance);
+                
+                // Visual feedback
+                sysChat(`AI ASSISTANT: Narration Complete.`);
+            } else {
+                alert("Voice Assist is not supported in this browser.");
+            }
+        }
+
+        // --- Actions ---
+        function postFood() {
+            const name = document.getElementById('d-name').value;
+            const addr = document.getElementById('d-address').value;
+            const diet = document.getElementById('d-diet').value;
+            const state = document.getElementById('d-state').value;
+            const made = document.getElementById('d-made').value;
+            const exp = document.getElementById('d-exp').value;
+
+            if(!name || !addr || !made || !exp) {
+                alert("SAFETY PROTOCOL ERROR: All fields including Making and Expiry time are mandatory to prevent food poisoning.");
+                return;
+            }
+
+            const item = { id: Date.now(), name, addr, diet, state, made, exp, status: 'available' };
+            app.foodDb.push(item);
+            
+            document.getElementById('d-name').value = '';
+            document.getElementById('d-address').value = '';
+            
+            sysChat(`SYSTEM: ${diet} ${state} cargo added at ${addr}.`);
+            confetti({ particleCount: 50, spread: 60, origin: { y: 0.8 } });
+            renderUI();
+        }
+
+        function claimFood(id) {
+            const dest = document.getElementById('ngo-address').value;
+            if(!dest) {
+                alert("ROUTING ERROR: You must set an exact Delivery Destination before claiming food.");
+                document.getElementById('ngo-address').focus();
+                return;
+            }
+
+            const item = app.foodDb.find(f => f.id === id);
+            item.status = 'claimed';
+            item.deliveryAddr = dest;
+            app.mission = item;
+            
+            document.getElementById('map-donor').classList.remove('hidden');
+            document.getElementById('map-ngo').classList.remove('hidden');
+            document.getElementById('map-status').innerText = `ROUTING GENERATED: Pick up at ${item.addr}`;
+            
+            if(!app.chatOpen) toggleChat();
+            sysChat(`MISSION LIVE: Runner dispatched for ${item.name}.`);
+            renderUI();
+        }
+
+        function startNav() {
+            const map = document.getElementById('map-runner');
+            document.getElementById('btn-nav').classList.add('hidden');
+            document.getElementById('btn-verify').classList.remove('hidden');
+            
+            map.style.top = "25%"; map.style.left = "20%";
+            document.getElementById('map-status').innerText = "RUNNER ARRIVED AT PICKUP. Cargo secured. En route to NGO.";
+            
+            setTimeout(() => {
+                map.style.top = "75%"; map.style.left = "80%";
+                document.getElementById('map-status').innerText = "ARRIVED AT DESTINATION. Awaiting Handshake Verification.";
+            }, 2500);
+        }
+
+        function completeTask() {
+            app.karma += 500;
+            app.mission = null;
+            
+            confetti({ particleCount: 150, spread: 80, zIndex: 9999 });
+            document.getElementById('karma-display').innerText = app.karma.toLocaleString();
+            
+            document.getElementById('btn-verify').classList.add('hidden');
+            document.getElementById('btn-nav').classList.remove('hidden');
+            document.getElementById('map-donor').classList.add('hidden');
+            document.getElementById('map-ngo').classList.add('hidden');
+            const map = document.getElementById('map-runner');
+            map.style.top = "auto"; map.style.bottom = "3rem"; map.style.left = "50%";
+            document.getElementById('map-status').innerText = "Mission Accomplished. Awaiting next coordinates...";
+            
+            sysChat(`SUCCESS: Handshake complete. +500 Karma transferred to Runner.`);
+            setRole('runner');
+        }
+
+        function downloadCert(level) {
+            confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+            alert(`Generating Official ${level} PDF Certificate...\n(This will download the file in production)`);
+        }
+
+        // --- Rendering Engine (PRIORITY SORTING) ---
+        function renderUI() {
+            const feed = document.getElementById('ngo-feed');
+            
+            // 1. Get available food
+            let avail = app.foodDb.filter(f => f.status === 'available');
+            
+            // 2. SORT BY EXPIRY DATE (Ascending: Earliest expiry first)
+            avail.sort((a, b) => new Date(a.exp) - new Date(b.exp));
+            
+            if(avail.length > 0) {
+                feed.innerHTML = avail.map((f, index) => {
+                    const tagD = f.diet === 'Veg' ? 'tag-veg' : 'tag-nonveg';
+                    const tagS = f.state === 'Dry' ? 'tag-dry' : 'tag-wet';
+                    const expStr = new Date(f.exp).toLocaleString([], {hour: '2-digit', minute:'2-digit', month:'short', day:'numeric'});
+
+                    // Determine if this is the highest priority item
+                    const isUrgent = index === 0; 
+                    const borderClass = isUrgent ? 'border-red-400 shadow-[0_0_15px_rgba(239,68,68,0.2)]' : 'border-slate-200';
+                    const urgentBadge = isUrgent ? `<div class="absolute -top-3 -right-3 bg-red-500 text-white text-[9px] font-black uppercase px-3 py-1 rounded-full shadow-lg animate-pulse">Critical Priority</div>` : '';
+
+                    return `
+                    <div class="glass p-6 rounded-3xl border-2 ${borderClass} relative flex flex-col md:flex-row justify-between md:items-center gap-4 hover:border-blue-300 transition-colors mt-4">
+                        ${urgentBadge}
+                        <div>
+                            <div class="flex gap-2 mb-3">
+                                <span class="text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider ${tagD}">${f.diet}</span>
+                                <span class="text-[10px] font-black px-2 py-1 rounded-full uppercase tracking-wider ${tagS}">${f.state}</span>
+                            </div>
+                            <h4 class="font-black text-xl text-slate-800 mb-1">${f.name}</h4>
+                            <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-2"><i class="fa-solid fa-location-dot mr-1"></i> ${f.addr}</p>
+                            <p class="text-xs font-bold text-red-600 bg-red-50 inline-block px-2 py-1 rounded border border-red-100"><i class="fa-regular fa-clock"></i> Expires: ${expStr}</p>
+                        </div>
+                        <button onclick="claimFood(${f.id})" class="bg-gradient-to-r from-blue-600 to-indigo-600 text-white px-8 py-4 rounded-2xl font-black shadow-lg hover:from-blue-500 hover:to-indigo-500 transition-colors w-full md:w-auto transform hover:-translate-y-1">CLAIM CARGO</button>
+                    </div>`;
+                }).join('');
+            } else {
+                feed.innerHTML = `
+                    <div class="glass p-10 rounded-3xl border border-slate-200 flex flex-col items-center justify-center text-center opacity-70">
+                        <i class="fa-solid fa-radar text-4xl text-slate-300 mb-4 animate-spin" style="animation-duration: 3s;"></i>
+                        <p class="text-xs font-black text-slate-400 uppercase tracking-widest">Scanning network for surplus...</p>
+                    </div>`;
+            }
+
+            // Runner Manifest Injection
+            if(app.mission) {
+                document.getElementById('r-manifest').classList.remove('hidden');
+                document.getElementById('r-cargo-name').innerText = app.mission.name;
+                document.getElementById('r-pickup-addr').innerText = app.mission.addr;
+                document.getElementById('r-delivery-addr').innerText = app.mission.deliveryAddr;
+                
+                const mDate = new Date(app.mission.made).toLocaleString([], {hour: '2-digit', minute:'2-digit'});
+                const eDate = new Date(app.mission.exp).toLocaleString([], {hour: '2-digit', minute:'2-digit', day:'numeric', month:'short'});
+                
+                document.getElementById('r-cargo-made').innerText = mDate;
+                document.getElementById('r-cargo-exp').innerText = eDate;
+
+                const tD = app.mission.diet === 'Veg' ? 'tag-veg' : 'tag-nonveg';
+                const tS = app.mission.state === 'Dry' ? 'tag-dry' : 'tag-wet';
+                document.getElementById('r-cargo-tags').innerHTML = `
+                    <span class="${tD} px-2 py-1 rounded uppercase tracking-widest">${app.mission.diet}</span>
+                    <span class="${tS} px-2 py-1 rounded uppercase tracking-widest">${app.mission.state}</span>
+                `;
+            } else {
+                document.getElementById('r-manifest').classList.add('hidden');
+            }
+        }
+
+        // --- Chat System ---
+        function toggleChat() {
+            app.chatOpen = !app.chatOpen;
+            const w = document.getElementById('chat-window');
+            if(app.chatOpen) {
+                w.classList.remove('translate-y-8', 'opacity-0', 'pointer-events-none');
+                w.classList.add('translate-y-0', 'opacity-100', 'pointer-events-auto');
+            } else {
+                w.classList.add('translate-y-8', 'opacity-0', 'pointer-events-none');
+                w.classList.remove('translate-y-0', 'opacity-100', 'pointer-events-auto');
+            }
+        }
+
+        function sysChat(text) {
+            const box = document.getElementById('chat-messages');
+            box.innerHTML = `<div class="text-center text-[9px] font-black text-slate-400 border-y border-slate-200 py-2 uppercase tracking-widest">${text}</div>` + box.innerHTML;
+        }
+
+        function sendChat() {
+            const input = document.getElementById('chat-input');
+            if(!input.value.trim()) return;
+
+            const box = document.getElementById('chat-messages');
+            const roleClass = `role-${app.role}`;
+            const roleLabel = app.role.toUpperCase();
+
+            const msgHtml = `
+                <div class="${roleClass} p-4 rounded-r-2xl rounded-bl-2xl shadow-sm max-w-[90%] fade-in-up border border-slate-100">
+                    <p class="text-[8px] font-black opacity-40 uppercase tracking-widest text-slate-800 mb-1">${roleLabel}</p>
+                    <p class="text-sm font-semibold text-slate-700 leading-snug">${input.value}</p>
+                </div>
+            `;
+            
+            box.innerHTML += msgHtml;
+            input.value = '';
+            box.scrollTop = box.scrollHeight;
+        }
+
+        // Initialize
+        setRole('donor');
+    </script>
+</body>
+</html>
